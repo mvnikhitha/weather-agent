@@ -2,24 +2,243 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ✅ Light/Dark Theme Variables */
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --font-sans: sans-serif;
-  --font-mono: monospace;
+/* Chat message bubble styles */
+.chat-message {
+  max-width: 75%;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  position: relative;
+  word-wrap: break-word;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.user-bubble {
+  background-color: #4C6E91;
+  color: white;
+  margin-left: auto;
+  border-top-right-radius: 0;
+}
+
+.bot-bubble {
+  background-color: #F0F0F0;
+  color: #333;
+  margin-right: auto;
+  border-top-left-radius: 0;
+}
+
+.bubble-arrow {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+}
+
+.user-bubble .bubble-arrow {
+  border-top: 10px solid #4C6E91;
+  right: 10px;
+}
+
+.bot-bubble .bubble-arrow {
+  border-top: 10px solid #F0F0F0;
+  left: 10px;
+}
+
+/* Animated heading */
+@keyframes fadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* ✅ Apply to Body */
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
+.animate-fadeSlide {
+  animation: fadeSlide 0.8s ease-out forwards;
 }
+
+/* Chat Scroll Container */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #444 #121212;
+}
+
+.chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-container::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 4px;
+}
+
+/* Message Bubbles */
+.message {
+  max-width: 75%;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  position: relative;
+}
+
+.user {
+  align-self: flex-end;
+  background-color: #007bff;
+  color: white;
+  border-bottom-right-radius: 0;
+}
+
+.bot {
+  align-self: flex-start;
+  background-color: #2c2c2c;
+  color: #e3e3e3;
+  border-bottom-left-radius: 0;
+}
+
+.user::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: -10px;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-top-color: #007bff;
+  border-bottom: 0;
+  border-left: 0;
+  margin-bottom: -2px;
+}
+
+.bot::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: -10px;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-top-color: #2c2c2c;
+  border-bottom: 0;
+  border-right: 0;
+  margin-bottom: -2px;
+}
+
+/* Input Area */
+
+
+.input-area input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 1rem;
+  outline: none;
+  font-size: 1rem;
+  background-color: white;
+  color: black;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.input-area input:focus {
+  background-color: #f5faff;
+  box-shadow: 0 0 0 2px #007bff80;
+}
+
+.input-area button {
+  padding: 0.75rem 1.2rem;
+  background-color: #050E2C;
+  color: white;
+  border: none;
+  border-radius: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s ease;
+}
+
+.input-area button:hover {
+  background-color: #005fcc;
+  transform: scale(1.03);
+}
+
+.input-area button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.message-wrapper {
+  display: flex;
+  width: 100%;
+}
+
+/* Fade-in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Glass-style Chat Bubble */
+.chat-bubble {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Backgrounds */
+:root {
+  --cloud-svg: url("data:image/svg+xml,%3Csvg width='1000' height='500' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.2'%3E%3Ccircle r='50' cx='100' cy='120'/%3E%3Ccircle r='70' cx='200' cy='130'/%3E%3Ccircle r='40' cx='300' cy='100'/%3E%3Ccircle r='60' cx='400' cy='140'/%3E%3Ccircle r='50' cx='500' cy='110'/%3E%3Ccircle r='80' cx='700' cy='130'/%3E%3Ccircle r='60' cx='850' cy='120'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.bg-clear {
+  background-image: linear-gradient(to bottom right, #f0f0f0, #9ecfff, #007bff);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-rainy {
+  background-image: linear-gradient(to bottom right, #dce5f5, #5a87ba, #1a2c4d);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-night {
+  background-image: linear-gradient(to bottom right, #68708B, #293455, #1E2F64);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-snow {
+  background-image: linear-gradient(to bottom right, #e2e8f4, #a1c4db, #558ba6);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+

@@ -9,51 +9,52 @@ from tools.weather_tool import get_weather
 from tools.aqi_tool import get_aqi
 from tools.activity_tool import suggest_activity
 
+# --- Setup ---
 load_dotenv()
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
-# Gemini API setup
+# Configure Gemini API
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Default chat model
-chat_model = genai.GenerativeModel("models/gemini-1.5-flash")
-chat = chat_model.start_chat(history=[])
-
+# Shared memory manager instance
 memory = MemoryManager()
 
+# Tool detector
 def detect_tools(message: str):
     msg = message.lower()
     tools = []
 
-    if "weather" in msg or "temperature" in msg:
+    if any(kw in msg for kw in ["weather", "temperature"]):
         tools.append("weather")
-    if "air quality" in msg or "aqi" in msg or "pollution" in msg:
+    if any(kw in msg for kw in ["air quality", "aqi", "pollution"]):
         tools.append("aqi")
-    if "what should i do" in msg or "activity" in msg or "suggest" in msg:
+    if any(kw in msg for kw in ["what should i do", "activity", "suggest"]):
         tools.append("activity")
 
     return tools
 
+# --- Core Chat Handler ---
 async def handle_chat(user_id: str, message: str) -> str:
     try:
-        logger.debug(f"Incoming message from '{user_id}': {message}")
-        memory_manager = MemoryManager()
+        logger.info(f"[{user_id}] → {message}")
 
-        relevant_memory = memory_manager.retrieve_memory(user_id, message)
-        logger.debug(f"Retrieved memory:\n{relevant_memory if relevant_memory else 'No relevant memory found.'}")
+        # Retrieve relevant memory
+        relevant_memory = memory.retrieve_memory(user_id, message)
+        if relevant_memory:
+            logger.debug(f"[{user_id}] Retrieved memory:\n{relevant_memory}")
+        else:
+            logger.debug(f"[{user_id}] No relevant memory found.")
 
+        # Tool Detection
         tools = detect_tools(message)
 
-        # 🌆 Dynamic City Extraction
-        city = extract_city(message)
-        if not city:
-            city = "Bangalore"  # fallback default
-            logger.debug("City not found in message. Using default: Bangalore")
-        else:
-            logger.debug(f"City extracted: {city}")
+        # Extract City
+        city = extract_city(message) or "Bangalore"
+        logger.debug(f"[{user_id}] City detected: {city}")
 
         responses = []
-        weather_info, aqi_info = None, None
+        weather_info = aqi_info = None
 
         if "weather" in tools:
             weather_info = get_weather(city)
@@ -72,23 +73,25 @@ async def handle_chat(user_id: str, message: str) -> str:
                 responses.append(aqi_info)
 
             suggestion = suggest_activity(f"{weather_info.lower()} {aqi_info.lower()}", relevant_memory)
-            responses.append(f"Based on that, I suggest: {suggestion}")
+            responses.append(f"🌟 Based on current conditions, here's a suggestion: {suggestion}")
 
-        # If no tools matched, send to Gemini for general reasoning
+        # Fallback: Use Gemini for general queries
         if not tools:
             prompt = f"{relevant_memory}\nUser: {message}" if relevant_memory else f"User: {message}"
-            logger.debug(f"Sending prompt to Gemini:\n{prompt}")
+            logger.debug(f"[{user_id}] Prompt sent to Gemini:\n{prompt}")
 
             model = genai.GenerativeModel("models/gemini-1.5-pro")
             response = model.generate_content(prompt)
-            assistant_reply = response.text.strip() if response.text else "Sorry, I couldn't understand that."
-            responses.append(assistant_reply)
+            reply = response.text.strip() if response.text else "Sorry, I couldn't understand that."
+            responses.append(reply)
 
+        # Final response
         final_reply = "\n\n".join(responses)
-        memory_manager.store_memory(user_id, message, final_reply)
+        memory.store_memory(user_id, message, final_reply)
 
+        logger.info(f"[{user_id}] ← {final_reply}")
         return final_reply
 
     except Exception as e:
-        logger.error(f"handle_chat failed: {e}")
-        return "Oops! Something went wrong while processing your request."
+        logger.exception(f"Error in handle_chat: {e}")
+        return "⚠️ Oops! Something went wrong while processing your message."
